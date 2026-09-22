@@ -28,129 +28,164 @@ function oldScrabbleScorer(word) {
     See README for full instructions and project requirements.
 */
 
-// TODO #1: Temporarily test original function to see output. Delete your log statements after testing.
+function transformScrabblePointStructure() {
+    let newStructure = {};
 
-/* 
-    TODO #4A: Define function to transform old score object and return a new one
-*/
+    for (let pointValue in oldPointStructure) {
+        let letterArray = oldPointStructure[pointValue]
+        for (let letter of letterArray) {
+            newStructure[letter.toLowerCase()] = Number(pointValue);
+        }
+    }
+    return newStructure;
+}
 
-// TODO #4B: Temporarily log the transformed object to inspect shape
+const newPointStructure = transformScrabblePointStructure();
 
 /** SIMPLE SCORER **/
 
-/* 
-    TODO #2A: Define simpleScorer function that returns a score calculated
-    using 1 point for each letter in the word
-*/
-
-// TODO #2B: Manually test simpleScorer with a few words
+const simpleScorer = word => word.length;
 
 /** VOWEL BONUS SCORER **/
 
-/* 
-    TODO #3A: Define vowelBonusScorer function that returns a score calculated
-    using 1 point for each consonant and 3 points for each vowel
-*/
+const vowelBonusScorer = word => {
+    let vowels = 'aeiou';
+    let score = 0;
 
-// TODO #3B: Manually test vowelBonusScorer with mixed-case words
+    for (let letter of word) {
+        if (vowels.includes(letter.toLowerCase())) {
+            score += 3;
+        } else {
+            score += 1;
+        }
+    }
+    return score;
+}
 
 /** NEW SCRABBLE SCORER **/
 
-/* 
-    TODO #4C: Create newPointStructure by calling transform function
-*/
-
-/* 
-    TODO #5A: Define newScrabbleScorer that returns a score calculated
-    using the point values in newPointStructure
-*/
-
-// TODO #5B: Manually test newScrabbleScorer with known words
+const newScrabbleScorer = word => {
+    let score = 0;
+    for (let letter of word) {
+        score += newPointStructure[letter.toLowerCase()];
+    }
+    return score;
+}
 
 /** DATA STRUCTURE TO FACILITATE GAMEPLAY **/
 
-/* 
-    TODO #6A: Create a data structure that will make it easy to associate a 
-    user's selected scoring mode based on them entering 0, 1, or 2;
-    for each mode we also need a name and a short description for 
-    presenting options. 
-*/
-
-// TODO #6B: Temporarily verify each scoring mode calls the expected scoring function
+const scoringModes = [
+    {
+        name: 'Simple',
+        description: 'Each letter is worth one point.',
+        scoreWord: simpleScorer,
+    },
+    {
+        name: 'Bonus Vowels',
+        description: 'Vowels are 3 points, consonants are 1 point',
+        scoreWord: vowelBonusScorer,
+    },
+    {
+        name: 'Scrabble',
+        description: 'Triditional Scrabble points.',
+        scoreWord: newScrabbleScorer,
+    },
+]
 
 /** USER INPUT VALIDATION HELPER FUNCTIONS (ADD WHEN NEEDED) **/
 
-/* 
-    TODO #9B: Define helper to check for valid number in index range
-    (Utilize this when finalizing scoring mode selection flow)
-*/
+function isValidIndex(index, array) {
+    index = Number(index.trim());
+    return !isNaN(index) && index >= 0 && index < array.length;
+}
 
-/* 
-    TODO #10B: Define helper to check if word is alpha only (without RegEx)
-    (Utilize this when finalizing word input flow)
-*/
+function isValidWord(word) {
+    const allowed = 'abcdefghijklmnopqrstuvwxyz';
+    word = word.trim().toLowerCase();
+    for (let letter of word) {
+        if (!allowed.includes(letter)) return false;
+    }
+    return true;
+}
 
-/* 
-    TODO #11A: Define helper to check if user wants to quit
-    (Utilize this when handling keyword commands)
-*/
+function shouldQuit(word) {
+    return word.toUpperCase().trim() === 'QUIT';
+}
 
-/* 
-    TODO #11B: Define helper to check if user wants to switch scoring mode
-    (Utilize this when handling keyword commands)
-*/
+function shouldSwitchMode(word) {
+    return word.toUpperCase().trim() === 'SWITCH';
+}
 
-/* 
-    TODO #12A: Define helper to check if user wants to see instructions again
-    (Utilize this when handling keyword commands)
-*/
+function shouldDisplayInstructions(word) {
+    return word.toUpperCase().trim() === 'HELP';
+}
 
 /** TASK-BASED HELPER FUNCTIONS */
 
-/*
-    TODO #8A: Define a function to give the user instructions. It should be used
-    once after the greeting but also be reusable if they want to view it
-    again.
-*/
+function displayInstructions() {
+    console.log('\nSelect from one of the three scoring modes:');
+    for (let mode of scoringModes) {
+        console.log(`   ${mode.name}:${mode.description}`)
+    }
+    console.log(`
+You may enter any word as long as it contains only alphabetical characters.
+    - Enter 'QUIT' instead to end the program.
+    - Enter 'SWITCH' to switch scoring modes.
+    - Enter 'HELP' to view instructinos again.
+          
+Have fun!`)
+}
 
-/* 
-    TODO #9A: Define a function to handle user input for scoring mode selection;
-    it should return the scoring mode object (not the validated input)
-*/
+function getScoringModeFromUser() {
+    console.log('\nWhich scoring mode would you like to use?');
+    let optionsText = '';
+    for(let i=0; i < scoringModes.length; i++) {
+        let option = scoringModes[i];
+        optionsText += `\n${i} - ${option.name}: ${option.description}`;
+    }
+    let selection = input.question(optionsText + "\n\nEnter a number: ");
+    while(!isValidIndex(selection, scoringModes)) {
+        selection = input.question("\n\nPlease enter a valid number from the options presented: ");
+    }
+    return scoringModes[selection];
+}
 
-/* 
-    TODO #10A: Define a function to handle user input for word to be scored;
-    it should return a word that has only alpha characters
-*/
+function getWordFromUser() {
+    let word = input.question('\nEnter a word to score: \n');
+    if (!isValidWord(word)) {
+        word = input.question('\nInvalid word. \nPlease enter a word with no spaces, numbers, symbols, or punctuation. \n');
+    }
+    return word;
+}
 
 /*
     This is the primary function that will run the entire program. 
     Make use of helper functions to define reusable subroutines.
     Design control flow mechanisms to meet requirements for program lifecycle.
 */
+
 function runProgram() {
-	// TODO #7A: Welcome the user
+	console.log('\nWELCOME TO SCRABBLE SCORER!');
 
-	// TODO #8B: Display instructions initially
-
-	// TODO #9C: Declare scorerObj (do not initialize)
-	// TODO #10C: Declare word (do not initialize)
-
-	// TODO #11C: Run iterative program lifecycle until user wants to quit
-	//      TODO #9D: Ask user for scorer mode selection
-	//      TODO #9E: Temporarily log scorerObj to see result and test various inputs
-
-	//      TODO #11D: Keep asking for new words until they enter QUIT or SWITCH
-	//          TODO #10D: Ask user for word
+	displayInstructions();
     
-	//          TODO #11E: Check for keywords before scoring; break loop if QUIT or SWITCH 
-    //          TODO #12B: Display instructions again if asking for help
-    //          TODO #12C: Ensure scoring happens only if no keyword was given
-    //          TODO #10E: Get score; display word & its score 
+	let scorerObj;
+    let word;
+	do {
+        scorerObj = getScoringModeFromUser();
+        while (true) {
+            word = getWordFromUser();
+            if(shouldDisplayInstructions(word)) displayInstructions();
+            else {
+                let score = scorerObj.scoreWord(word);
+                console.log(`\nScore for ${word}: ${score}`)
+            }
+            if (shouldQuit(word) || shouldSwitchMode(word)) break;
+        }
+    } while(!shouldQuit(word));
 
-	// TODO #13: Log a friendly signoff after outer loop exits
+    console.log('\n\nThank you for playing!')
 }
 
 // TODO #7B: Call the primary function to run its code block
-
-// TODO #14: Perform rigorous testing of all possible paths (scoring mode, words, HELP, SWITCH, QUIT)
+runProgram();
